@@ -1,0 +1,75 @@
+name: Generate new icons
+on:
+  schedule:
+    - cron: "0 0 * * *"
+
+jobs:
+  build:
+    timeout-minutes: 5
+    name: Generate new icons
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ssh-key: "${{ secrets.DEPLOY_KEY }}"
+          fetch-depth: 0
+
+      - name: Update font based on the latest release
+        id: vars
+        run: |
+          RELEASE=$(curl -s "https://api.github.com/repos/lucide-icons/lucide/releases/latest")
+          TAG=$(printf "%s" $RELEASE | jq -r .tag_name)
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "Latest release: $TAG" 
+
+          if [ $(git tag -l "$TAG") ]; then
+              echo "No changes since the latest release - aborting."
+              echo "EXISTS=true" >> $GITHUB_ENV
+              exit 0
+          fi
+
+          URL=$(printf "%s" $RELEASE | jq -r '.assets[] | select(.name | startswith("lucide-font")) | .browser_download_url')
+
+          echo "Downloading $URL" 
+          curl -vLJO -H 'Accept: application/octet-stream' $URL
+          unzip -o lucide-font-*.zip
+
+          echo "Updating assets"
+          mv lucide-font/info.json assets/info.json
+          mv lucide-font/lucide.ttf assets/lucide.ttf
+
+          echo "Removing leftovers"
+          rm -rf lucide-font
+          rm -f lucide-font-*.zip
+
+      - name: Install Flutter
+        if: env.EXISTS != 'true'
+        uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+
+      - name: Install dependencies
+        if: env.EXISTS != 'true'
+        run: flutter pub get
+
+      - name: Generate icons
+        if: env.EXISTS != 'true'
+        run: dart run tool/generate_fonts.dart
+
+      - name: Bump package version
+        if: env.EXISTS != 'true'
+        run: |
+          sed -i "s/version: .*/version: $TAG/" pubspec.yaml
+
+      - name: Push changes
+        if: env.EXISTS != 'true'
+        run: |
+          # See for more details: https://github.com/actions/checkout/pull/1184
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Release $TAG"
+          git push
+          git tag $TAG
+          git push origin $TAG
