@@ -10,6 +10,8 @@ void main(List<String> args) {
   ) as Map<String, dynamic>;
 
   final generatedOutput = <String>[
+    "// GENERATED CODE - DO NOT MODIFY BY HAND",
+    "",
     "import 'package:flutter/widgets.dart';",
     '',
     'final class _IconData extends IconData {',
