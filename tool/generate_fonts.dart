@@ -14,8 +14,8 @@ void main(List<String> args) {
     "",
     "import 'package:flutter/widgets.dart';",
     '',
-    'final class _IconData extends IconData {',
-    '  const _IconData(super.codePoint)',
+    'final class LucideIconData extends IconData {',
+    '  const LucideIconData(super.codePoint)',
     "      : super(fontFamily: 'Lucide', fontPackage: 'lucide_icons');",
     '}',
     '',
@@ -28,7 +28,7 @@ void main(List<String> args) {
         '${icon.value['unicode']}'.replaceFirst('&#', '').replaceFirst(';', '');
 
     generatedOutput.add(
-      '  static const IconData ${ReCase(name).camelCase} = _IconData(0x$codePoint);',
+      '  static const IconData ${ReCase(name).camelCase} = LucideIconData(0x$codePoint);',
     );
   }
 
