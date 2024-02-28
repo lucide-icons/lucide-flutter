@@ -28,7 +28,7 @@ void main(List<String> args) {
         '${icon.value['unicode']}'.replaceFirst('&#', '').replaceFirst(';', '');
 
     generatedOutput.add(
-      '  static const IconData ${ReCase(name).camelCase} = LucideIconData(0x$codePoint);',
+      '  static const IconData ${ReCase(name).camelCase} = LucideIconData($codePoint);',
     );
   }
 
